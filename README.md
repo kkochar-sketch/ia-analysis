@@ -24,3 +24,13 @@ Analyzes leaderboard tab access (under Play tab) by user retention cohort over t
 - % accessing leaderboard
 - Avg days active on leaderboard
 - Avg days since last leaderboard access
+
+### Scan Tap Entry Point
+**File**: [`queries/scan_tap_entry_point.sql`](queries/scan_tap_entry_point.sql)
+
+Breaks down `Scan Started` taps by originating surface over the last 90 days.
+
+**Data Source**: `FETCH_SERVICES_PROD.WEBSOCKET_SERVICE.WS_SCAN_STAGE`
+- Event: `Scan Started` → `ENTRY_POINT`
+
+**Caveat**: `ENTRY_POINT` values are `Discover`, `Other`, `Me`, `DeepLink`, `Rewards`. There is no explicit `Home` value — untracked surfaces (possibly including Home) are folded into `Other`, and the raw event payload has no secondary field to disambiguate them. So this does not currently give a clean Home-vs-other-tabs split; it distinguishes Discover/Me/Rewards/DeepLink from everything else.
