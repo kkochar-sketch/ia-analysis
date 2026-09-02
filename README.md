@@ -62,6 +62,21 @@ Average ~154 offers/user. Max observed: 4,791 (≈29% of the live catalog) — n
 
 **Caveat**: ~94 of the 16,601 live Restaurant offers have no rows at all in `OFFERS_AUDIENCE_CURRENT_SNAPSHOT` (likely brand-new or open-audience offers not yet processed into the snapshot). Those are excluded from everyone's eligible count — a small, uniform undercount, not something that changes the shape of the distribution. Also note this table is ~69B rows / ~2.3TB, so the query takes 5-8 minutes on a standard warehouse.
 
+### AU31 Rewards Network Offer Eligibility Distribution
+**File**: [`queries/au31_rewards_network_offer_eligibility.sql`](queries/au31_rewards_network_offer_eligibility.sql)
+
+Same question as the section above, narrowed to Rewards Network offers (`businessId = '672cf2953228c23b4dc0cab2'`). 16,424 live RN offers as of 2026-09-02.
+
+**Data Sources**: same as the restaurant version, plus `FETCH_SERVICES_PROD.STAGING.OFFER_CAMPAIGNS_ATTRIBUTES_STAGE` for the business filter.
+
+**Why the campaign join**: `businessId` lives on the offer *campaign*, not the offer — `OFFERS_ATTRIBUTES` has no `business_id` column — so the filter comes in via `OFFER_CAMPAIGN_ID`. The stage table is incremental on `offer_campaign_id` (delete+insert), so it's one current-state row per campaign; no dedupe needed.
+
+**Caveats**:
+- *Freshness*: that stage table ran ~8h behind when checked on 2026-09-02, so offers from campaigns created since its last load drop out silently (4 that day). Immaterial across ~16.4K offers; for same-day completeness, source the campaign list from `FETCH_SERVICES_PROD.OFFERS.OFFER_CAMPAIGNS_CHANGES` instead.
+- *No category filter*: all 16,424 live RN offers are already `CATEGORY = 'RESTAURANTS'` (vs. 16,564 live Restaurants overall), so this is a strict subset of the restaurant population and the filter would be a no-op.
+
+No `CATEGORY` filter is applied — verified that all 16,424 live `businessId`-RN offers are `CATEGORY = 'RESTAURANTS'`, so this is a strict subset of the restaurant population above, not a different slice of it. Adding the category filter would be a no-op today.
+
 ### Rewards Network (RN) vs. Non-RN Offer Performance
 **Files**:
 - [`queries/rn_vs_nonrn_tap_in_rate.sql`](queries/rn_vs_nonrn_tap_in_rate.sql)
