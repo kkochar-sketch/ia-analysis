@@ -61,3 +61,43 @@ Of AU31 users (active in the trailing 31 days), how many live Restaurant-categor
 Average ~154 offers/user. Max observed: 4,791 (≈29% of the live catalog) — nobody is eligible for the majority of live Restaurant offers, and almost nobody (0.08%) is eligible for none. Eligibility is wide but shallow: most users qualify for *some* restaurant offers, but only a small slice of the total catalog, consistent with offers being chain/location-specific rather than broadly targeted.
 
 **Caveat**: ~94 of the 16,601 live Restaurant offers have no rows at all in `OFFERS_AUDIENCE_CURRENT_SNAPSHOT` (likely brand-new or open-audience offers not yet processed into the snapshot). Those are excluded from everyone's eligible count — a small, uniform undercount, not something that changes the shape of the distribution. Also note this table is ~69B rows / ~2.3TB, so the query takes 5-8 minutes on a standard warehouse.
+
+### Rewards Network (RN) vs. Non-RN Offer Performance
+**Files**:
+- [`queries/rn_vs_nonrn_tap_in_rate.sql`](queries/rn_vs_nonrn_tap_in_rate.sql)
+- [`queries/rn_vs_nonrn_impressed_redemption_rate.sql`](queries/rn_vs_nonrn_impressed_redemption_rate.sql)
+- [`queries/rn_vs_nonrn_offer_mechanics.sql`](queries/rn_vs_nonrn_offer_mechanics.sql)
+- [`queries/rn_vs_nonrn_catalog_exploration_metrics.sql`](queries/rn_vs_nonrn_catalog_exploration_metrics.sql)
+
+Compares offers where `OFFERS_ATTRIBUTES.PAYER = 'Rewards Network'` (RN) against everything else, across tap-in rate, redemption rate, offer mechanics, and catalog-level exploration metrics. `PAYER = 'Rewards Network'` is 100% Restaurants category, and is ~99% of currently-live Restaurant offers (16,479 of 16,601) — so this is effectively "Restaurants (via RN) vs. everything else."
+
+**Tap-in rate & impressed redemption rate** (trailing 30 days, `WS_OFFER_BRAND_IMPRESSIONS_STAGE` joined to `OFFERS_ATTRIBUTES.PAYER`; redemptions from `OFFER_USAGES`):
+
+| Payer group | Impressions | Taps | Tap-in rate | Redemptions | Impressed redemption rate | # offers |
+|---|---|---|---|---|---|---|
+| Rewards Network | 63.97M | 637K | 0.996% | 706,708 | 1.1025% | 18,642 / 18,548 |
+| Not Rewards Network | 2.26B | 25.09M | 1.108% | 25.38M | 1.1181% | 5,348 / 3,471 |
+
+RN taps in ~10% relatively lower than non-RN, but redemption rate is nearly identical (~1.4% relative gap, effectively noise). So the RN gap is a discovery/tap-in problem, not a value/conversion problem.
+
+**Caveat on offer counts**: the `n_offers` figures above (18,642 / 5,348) count any offer with impression, tap, or detail-view activity in the trailing 30 days — not offers live *right now*. That trailing-window count will always run ahead of a live-now snapshot (16,479 RN / 16,601 total Restaurants) because offers rotate; some counted here have since expired. Don't directly compare these counts to the AU31 eligibility section above without accounting for that.
+
+**Offer mechanics** (currently-live offers, `OFFERS_ATTRIBUTES`):
+
+| Payer group | % store-targeted | Median $ required | Median points earned | Avg description length |
+|---|---|---|---|---|
+| Rewards Network | 0.0% | 1 (looks like an "any purchase" flag) | 500 | 9 chars |
+| Not Rewards Network | 55.7% | 1,200 (unit ambiguous, likely cents) | 1,800 | 12 chars |
+
+RN offers have a near-zero purchase threshold, no named-store targeting (broader eligibility, not narrower), a lower point payout, and much shorter on-card description text than non-RN offers. Working hypothesis: the low tap-in rate is driven by weak on-card differentiation (generic/unfamiliar branding, no food/lifestyle imagery, minimal copy) rather than by purchase conditions or geo-targeting friction — RN isn't the more geo-restricted group, so that's not the driver. Imagery specifically is a hypothesis, not confirmed: this table has no creative/asset data to test it directly.
+
+**Catalog-level exploration metrics** (trailing 30 days): whether RN's offer-count share drags down an "exploration" metric depends entirely on how it's weighted.
+
+| Payer group | # offers w/ impressions | % offers ever tapped | Unweighted avg per-offer tap rate |
+|---|---|---|---|
+| Rewards Network | 18,548 | 91.8% | 0.843% |
+| Not Rewards Network | 3,473 | 73.6% | 2.114% |
+
+- **Impression-weighted** (total taps ÷ total impressions, the tap-in rate table above): RN is only ~2.7% of total impression volume, so its lower rate barely moves the blended number (~1.104% actual vs. ~1.107% counterfactual if RN matched non-RN — a ~0.3% relative drag).
+- **Offer-weighted / catalog-level** (simple average across offers, unweighted by impression volume): RN is ~84% of all offers with impressions, so a catalog-level average tap rate (~1.04%) sits much closer to RN's own rate (0.843%) than to non-RN's (2.114%), purely because RN outnumbers everything else 5-to-1. As RN's share of the catalog grows, this kind of metric mechanically drifts toward RN's lower rate regardless of whether non-RN behavior changes at all.
+- Note the "% offers ever tapped" (catalog coverage) metric actually favors RN (91.8% vs. 73.6%) — RN's broad eligibility means almost every RN offer gets touched at least once, even though each gets a much lower share of its impressions converted. Don't treat every exploration-style metric as moving in the same direction; check which one is actually being tracked before drawing conclusions.
