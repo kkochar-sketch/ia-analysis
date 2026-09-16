@@ -68,6 +68,7 @@ Average ~154 offers/user. Max observed: 4,791 (≈29% of the live catalog) — n
 - [`queries/rn_vs_nonrn_impressed_redemption_rate.sql`](queries/rn_vs_nonrn_impressed_redemption_rate.sql)
 - [`queries/rn_vs_nonrn_offer_mechanics.sql`](queries/rn_vs_nonrn_offer_mechanics.sql)
 - [`queries/rn_vs_nonrn_catalog_exploration_metrics.sql`](queries/rn_vs_nonrn_catalog_exploration_metrics.sql)
+- [`queries/rn_vs_nonrn_revenue_split.sql`](queries/rn_vs_nonrn_revenue_split.sql)
 
 Compares offers where `OFFERS_ATTRIBUTES.PAYER = 'Rewards Network'` (RN) against everything else, across tap-in rate, redemption rate, offer mechanics, and catalog-level exploration metrics. `PAYER = 'Rewards Network'` is 100% Restaurants category, and is ~99% of currently-live Restaurant offers (16,479 of 16,601) — so this is effectively "Restaurants (via RN) vs. everything else."
 
@@ -101,3 +102,18 @@ RN offers have a near-zero purchase threshold, no named-store targeting (broader
 - **Impression-weighted** (total taps ÷ total impressions, the tap-in rate table above): RN is only ~2.7% of total impression volume, so its lower rate barely moves the blended number (~1.104% actual vs. ~1.107% counterfactual if RN matched non-RN — a ~0.3% relative drag).
 - **Offer-weighted / catalog-level** (simple average across offers, unweighted by impression volume): RN is ~84% of all offers with impressions, so a catalog-level average tap rate (~1.04%) sits much closer to RN's own rate (0.843%) than to non-RN's (2.114%), purely because RN outnumbers everything else 5-to-1. As RN's share of the catalog grows, this kind of metric mechanically drifts toward RN's lower rate regardless of whether non-RN behavior changes at all.
 - Note the "% offers ever tapped" (catalog coverage) metric actually favors RN (91.8% vs. 73.6%) — RN's broad eligibility means almost every RN offer gets touched at least once, even though each gets a much lower share of its impressions converted. Don't treat every exploration-style metric as moving in the same direction; check which one is actually being tracked before drawing conclusions.
+
+**Revenue split** (calendar month August 2026, `OFFERS_ATTRIBUTES.CATEGORY = 'RESTAURANTS'` joined to `FINANCE.REVENUE_AND_EXPENSE_MODEL.REVENUE`):
+
+| Payer group | Total revenue | # offers w/ revenue | Avg revenue per offer |
+|---|---|---|---|
+| Rewards Network | $1,473,355 | 16,634 | $88.58 |
+| Not Rewards Network | $703,894 | 93 | $7,569.83 |
+
+RN is ~99.4% of restaurant offers by count but only ~67.7% of restaurant category revenue. The 93 non-RN offers (brand-funded deals — Taco Bell, KFC, Chipotle, Costco, Pepsico, DoorDash, Albertsons, Baskin-Robbins, etc.) are 0.6% of offer count but 32.3% of revenue, averaging ~85x more revenue per offer than a typical RN offer.
+
+**Caveat**: cross-checking against a different category source (`fetch_services_prod.lighthouse.offer_level_metrics` instead of `OFFERS_ATTRIBUTES`, same August window) gives only 35 non-RN offers and a 75.3% / 24.7% split instead of 93 offers and 67.7% / 32.3%. The two source tables disagree on which offers count as non-RN Restaurant offers. The direction (RN dominates count, non-RN dominates revenue-per-offer by roughly two orders of magnitude) holds either way; the decimal split does not.
+
+**Caveat**: `FETCH_SERVICES_PROD.FINANCE.REVENUE_AND_EXPENSE` (no `_MODEL` suffix) is currently a broken view — querying it throws a column-count mismatch error. Use `REVENUE_AND_EXPENSE_MODEL`, which works.
+
+**Caveat**: the RN revenue figure here ($1.473M) differs from `ANALYTICS_PROD.REWARDS_NETWORK.RN_DAILY_REVENUE` for the same month ($1.513M) by about 2.6%. Two different revenue systems, not reconciled — confirm with whoever owns RN finance reporting before citing either number externally.
