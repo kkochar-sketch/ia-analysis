@@ -62,6 +62,36 @@ Average ~154 offers/user. Max observed: 4,791 (≈29% of the live catalog) — n
 
 **Caveat**: ~94 of the 16,601 live Restaurant offers have no rows at all in `OFFERS_AUDIENCE_CURRENT_SNAPSHOT` (likely brand-new or open-audience offers not yet processed into the snapshot). Those are excluded from everyone's eligible count — a small, uniform undercount, not something that changes the shape of the distribution. Also note this table is ~69B rows / ~2.3TB, so the query takes 5-8 minutes on a standard warehouse.
 
+### AU31 Rewards Network Offer Eligibility Distribution
+**File**: [`queries/au31_rewards_network_offer_eligibility.sql`](queries/au31_rewards_network_offer_eligibility.sql)
+
+Same question as the section above, narrowed to Rewards Network offers (`businessId = '672cf2953228c23b4dc0cab2'`). 16,424 live RN offers as of 2026-09-02.
+
+**Data Sources**: same as the restaurant version, plus `FETCH_SERVICES_PROD.STAGING.OFFER_CAMPAIGNS_ATTRIBUTES_STAGE` for the business filter.
+
+**Snapshot as of 2026-09-02**: AU31 population = 14,033,408. Live RN offers = 16,424.
+
+| # of RN offers eligible for | # of AU31 users | % of AU31 | % of AU31 (all Restaurants, 2026-09-01) |
+|---|---|---|---|
+| 0 | 18,122 | 0.13% | 0.08% |
+| 1–9 | 2,128,452 | 15.17% | 3.99% |
+| 10–49 | 3,107,801 | 22.15% | 29.80% |
+| 50–99 | 2,300,248 | 16.39% | 16.71% |
+| 100–249 | 4,040,097 | 28.79% | 30.83% |
+| 250–499 | 1,702,613 | 12.13% | 13.09% |
+| 500–999 | 677,582 | 4.83% | 5.05% |
+| 1,000+ | 58,493 | 0.42% | 0.46% |
+
+RN accounts for 99.2% of live Restaurant offers, so the shape is nearly identical to the restaurant distribution — with one real difference at the bottom end. The `1–9` bucket nearly quadruples (3.99% → 15.17%, ~1.57M more users) and `10–49` drops by a matching ~7.7pp. The ~140 non-RN restaurant offers are evidently broadly targeted: they're what lift low-eligibility users out of single digits, and without them a sixth of AU31 qualifies for fewer than 10 offers. Everything from `50–99` up is essentially unchanged, and the "eligible for none" group stays negligible (0.13%).
+
+**Why the campaign join**: `businessId` lives on the offer *campaign*, not the offer — `OFFERS_ATTRIBUTES` has no `business_id` column — so the filter comes in via `OFFER_CAMPAIGN_ID`. The stage table is incremental on `offer_campaign_id` (delete+insert), so it's one current-state row per campaign; no dedupe needed.
+
+**Caveats**:
+- *Freshness*: that stage table ran ~8h behind when checked on 2026-09-02, so offers from campaigns created since its last load drop out silently (4 that day). Immaterial across ~16.4K offers; for same-day completeness, source the campaign list from `FETCH_SERVICES_PROD.OFFERS.OFFER_CAMPAIGNS_CHANGES` instead.
+- *No category filter*: all 16,424 live RN offers are already `CATEGORY = 'RESTAURANTS'` (vs. 16,564 live Restaurants overall), so this is a strict subset of the restaurant population and the filter would be a no-op.
+
+No `CATEGORY` filter is applied — verified that all 16,424 live `businessId`-RN offers are `CATEGORY = 'RESTAURANTS'`, so this is a strict subset of the restaurant population above, not a different slice of it. Adding the category filter would be a no-op today.
+
 ### Rewards Network (RN) vs. Non-RN Offer Performance
 **Files**:
 - [`queries/rn_vs_nonrn_tap_in_rate.sql`](queries/rn_vs_nonrn_tap_in_rate.sql)
