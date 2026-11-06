@@ -11,9 +11,9 @@
 -- Method: count distinct live offers per user per primary cuisine (user-offer and offer
 -- windows both current). 3+ offers = cuisine shelf shows. 1-2 = offers exist but no shelf.
 --
--- Snapshot 2026-11-06: AU31 = 14,133,513. 94.89% of AU31 have 1+ cuisine with 1-2 offers
--- (avg 7.10); avg 13.92 cuisines with a shelf; 81.38% have 3+ shelves; 4.91% of
--- cuisine-tagged user-offer pairs sit in a 1-2 offer cuisine; 3.69% have no
+-- Snapshot 2026-11-06: AU31 = 14,133,513. 94.9% of AU31 have 1+ cuisine with 1-2 offers
+-- (avg 7.1); avg 13.9 cuisines with a shelf; 81.4% have 3+ shelves; 4.9% of
+-- cuisine-tagged user-offer pairs sit in a 1-2 offer cuisine; 3.7% have no
 -- cuisine-tagged offer at all.
 --
 -- CAVEATS: 3+ per-cuisine counts roughly match the AU31 Reach sheet (American 88.7% vs
