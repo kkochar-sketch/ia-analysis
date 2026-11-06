@@ -132,20 +132,20 @@ For the Dine pill cuisine shelves (shown only with 3+ eligible offers), how many
 
 | # of cuisines with only 1-2 offers | % of AU31 |
 |---|---|
-| 0 | 5.11% |
-| 1 | 5.30% |
-| 2 | 6.62% |
-| 3 | 6.68% |
-| 4 | 7.08% |
-| 5 | 6.97% |
-| 6-7 | 14.76% |
-| 8-10 | 24.21% |
-| 11-15 | 21.57% |
-| 16+ | 1.69% |
+| 0 | 5.1% |
+| 1 | 5.3% |
+| 2 | 6.6% |
+| 3 | 6.7% |
+| 4 | 7.1% |
+| 5 | 7.0% |
+| 6-7 | 14.8% |
+| 8-10 | 24.2% |
+| 11-15 | 21.6% |
+| 16+ | 1.7% |
 
-- 94.89% of AU31 have 1+ cuisine with only 1-2 offers (avg 7.10 per user).
-- Avg 13.92 cuisines per user do get a shelf. 81.38% have 3+ shelves.
-- 4.91% of cuisine-tagged user-offer pairs sit in a 1-2 offer cuisine.
-- 3.69% of AU31 have no cuisine-tagged offer at all.
+- 94.9% of AU31 have 1+ cuisine with only 1-2 offers (avg 7.1 per user).
+- Avg 13.9 cuisines per user do get a shelf. 81.4% have 3+ shelves.
+- 4.9% of cuisine-tagged user-offer pairs sit in a 1-2 offer cuisine.
+- 3.7% of AU31 have no cuisine-tagged offer at all.
 
 **Caveats**: Per-cuisine 3+ counts roughly match the AU31 Reach sheet, but Coffee is off (38% vs 58%) and the cause is not yet found. Excludes daypart shelves.
