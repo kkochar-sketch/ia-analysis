@@ -117,3 +117,35 @@ RN is ~99.4% of restaurant offers by count but only ~67.7% of restaurant categor
 **Caveat**: `FETCH_SERVICES_PROD.FINANCE.REVENUE_AND_EXPENSE` (no `_MODEL` suffix) is currently a broken view — querying it throws a column-count mismatch error. Use `REVENUE_AND_EXPENSE_MODEL`, which works.
 
 **Caveat**: the RN revenue figure here ($1.473M) differs from `ANALYTICS_PROD.REWARDS_NETWORK.RN_DAILY_REVENUE` for the same month ($1.513M) by about 2.6%. Two different revenue systems, not reconciled — confirm with whoever owns RN finance reporting before citing either number externally.
+
+### AU31 Dine Cuisine Shelf Eligibility (1-2 offer cuisines)
+**File**: [`queries/au31_cuisine_low_offer_distribution.sql`](queries/au31_cuisine_low_offer_distribution.sql)
+
+For the Dine pill cuisine shelves (shown only with 3+ eligible offers), how many cuisines does each AU31 user have where they are eligible for only 1-2 offers?
+
+**Data Sources**:
+- `ANALYTICS_PROD.FETCHDW.P_USER` for the AU31 cohort
+- `FETCH_SERVICES_PROD.DINING_METADATA_SERVICE.DINING_METADATA_UPDATED_METADATA_CURRENT_STATE_FSD` for primary cuisine per location
+- `ANALYTICS_PROD.REWARDS_NETWORK.RN_DAILY_USER_OFFER` for live user-offer-location eligibility
+
+**Snapshot as of 2026-11-06**: AU31 population = 14,133,513. 32 primary cuisines.
+
+| # of cuisines with only 1-2 offers | % of AU31 |
+|---|---|
+| 0 | 5.11% |
+| 1 | 5.30% |
+| 2 | 6.62% |
+| 3 | 6.68% |
+| 4 | 7.08% |
+| 5 | 6.97% |
+| 6-7 | 14.76% |
+| 8-10 | 24.21% |
+| 11-15 | 21.57% |
+| 16+ | 1.69% |
+
+- 94.89% of AU31 have 1+ cuisine with only 1-2 offers (avg 7.10 per user).
+- Avg 13.92 cuisines per user do get a shelf. 81.38% have 3+ shelves.
+- 4.91% of cuisine-tagged user-offer pairs sit in a 1-2 offer cuisine.
+- 3.69% of AU31 have no cuisine-tagged offer at all.
+
+**Caveats**: Per-cuisine 3+ counts roughly match the AU31 Reach sheet, but Coffee is off (38% vs 58%) and the cause is not yet found. Excludes daypart shelves.
